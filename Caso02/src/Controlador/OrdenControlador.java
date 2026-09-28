@@ -24,11 +24,14 @@ public class OrdenControlador {
         this.repositorio = repositorio;
         this.vista = vista;
         registrarEventos();
+        // Inicializa en la tarjeta de cliente
+        mostrar("card2");
     }
 
     private void registrarEventos() {
         on("btnRegistrarCliente", e -> registrarCliente());
         on("btnLimpiar", e -> limpiarCliente());
+        on("Buscar", e -> buscarCliente());
         on("btnRegistrarEquipo", e -> registrarEquipo());
         on("btnRegresar", e -> mostrar("card2"));
         on("btnRegistrarServicio", e -> prepararOrden());
@@ -48,8 +51,19 @@ public class OrdenControlador {
         }
         
         cliente = new Cliente(dni, nombre, telefono);
-        info("Cliente registrado");
-        mostrar("card2");
+        info("Cliente registrado exitosamente.\nProcediendo a registrar equipo...");
+        limpiarCliente();
+        // Navega a la tarjeta de equipo
+        mostrar("card3");
+    }
+
+    private void buscarCliente() {
+        String dni = texto("txtDni");
+        if (dni.isEmpty()) {
+            error("Ingrese un DNI para buscar");
+            return;
+        }
+        info("Búsqueda de cliente con DNI: " + dni + "\n(Funcionalidad disponible con base de datos)");
     }
 
     private void limpiarCliente() {
@@ -63,19 +77,38 @@ public class OrdenControlador {
         String marca = texto("txtMarca");
         String modelo = texto("txtModelo");
         
-        if (tipo.isEmpty() || marca.isEmpty() || modelo.isEmpty()) {
-            error("Complete todos los datos del equipo");
+        if (tipo == null || tipo.isEmpty() || tipo.equals("Item 1")) {
+            error("Seleccione un tipo de equipo válido");
+            return;
+        }
+        if (marca.isEmpty()) {
+            error("Ingrese la marca del equipo");
+            return;
+        }
+        if (modelo.isEmpty()) {
+            error("Ingrese el modelo del equipo");
             return;
         }
         
         equipo = new Equipo(tipo, marca, modelo);
-        info("Equipo registrado");
-        mostrar("card3");
+        info("Equipo registrado exitosamente.\nProcediendo a registrar servicio...");
+        limpiarEquipo();
+        // Navega a la tarjeta de servicio
+        mostrar("card4");
+    }
+
+    private void limpiarEquipo() {
+        setTexto("txtMarca", "");
+        setTexto("txtModelo", "");
     }
 
     private void prepararOrden() {
-        if (cliente == null || equipo == null) {
-            error("Registre primero el cliente y el equipo");
+        if (cliente == null) {
+            error("Debe registrar un cliente primero");
+            return;
+        }
+        if (equipo == null) {
+            error("Debe registrar un equipo primero");
             return;
         }
         
@@ -83,8 +116,16 @@ public class OrdenControlador {
         String urgencia = radio();
         String descripcion = texto("jTextArea1");
         
-        if (base.isEmpty() || urgencia.isEmpty() || descripcion.isEmpty()) {
-            error("Complete los datos del servicio");
+        if (base == null || base.isEmpty() || base.equals("Item 1")) {
+            error("Seleccione un servicio base válido");
+            return;
+        }
+        if (urgencia.isEmpty()) {
+            error("Seleccione un nivel de urgencia");
+            return;
+        }
+        if (descripcion.isEmpty()) {
+            error("Describa el problema del equipo");
             return;
         }
         
@@ -98,9 +139,23 @@ public class OrdenControlador {
             }
         }
         
-        ordenPendiente = new OrdenServicio(cliente, equipo, new Servicio(base, urgencia, descripcion), adicionales);
+        ordenPendiente = new OrdenServicio(cliente, equipo, 
+                                          new Servicio(base, urgencia, descripcion), 
+                                          adicionales);
+        
         setTexto("jTextArea2", resumen(ordenPendiente));
-        mostrar("card4");
+        limpiarServicio();
+        info("Servicio registrado.\nVerifique el resumen de la orden...");
+        // Navega a la tarjeta de resumen
+        mostrar("card5");
+    }
+
+    private void limpiarServicio() {
+        setTexto("jTextArea1", "");
+        getCheckBox("jCheckBox1").setSelected(false);
+        getCheckBox("jCheckBox2").setSelected(false);
+        getCheckBox("jCheckBox3").setSelected(false);
+        getCheckBox("jCheckBox5").setSelected(false);
     }
 
     private void confirmarOrden() {
@@ -109,21 +164,44 @@ public class OrdenControlador {
             return;
         }
         repositorio.guardar(ordenPendiente);
-        info("Orden registrada con código " + ordenPendiente.getId());
+        info("✓ Orden registrada con éxito\nCódigo de orden: " + ordenPendiente.getId());
         ordenPendiente = null;
+        cliente = null;
+        equipo = null;
+        
+        // Reinicia el flujo
         mostrar("card2");
     }
 
     private String resumen(OrdenServicio o) {
         StringBuilder s = new StringBuilder();
-        s.append("CLIENTE\n").append(o.getCliente()).append("\n\n");
-        s.append("EQUIPO\n").append(o.getEquipo()).append("\n\n");
-        s.append("SERVICIO\n").append(o.getServicio().getServicioBase()).append(" - ").append(o.getServicio().getUrgencia()).append("\n");
-        s.append(o.getServicio().getDescripcionProblema()).append("\n\n");
-        s.append("ADICIONALES\n");
-        for (ServicioAdicional a : o.getServiciosAdicionales()) {
-            s.append("- ").append(a).append("\n");
+        s.append("═════════════════════════════\n");
+        s.append("          RESUMEN DE ORDEN\n");
+        s.append("═════════════════════════════\n\n");
+        
+        s.append("CLIENTE\n");
+        s.append("DNI: ").append(o.getCliente().getDni()).append("\n");
+        s.append("Nombre: ").append(o.getCliente().getNombre()).append("\n");
+        s.append("Teléfono: ").append(o.getCliente().getTelefono()).append("\n\n");
+        
+        s.append("EQUIPO\n");
+        s.append("Tipo: ").append(o.getEquipo().getTipo()).append("\n");
+        s.append("Marca: ").append(o.getEquipo().getMarca()).append("\n");
+        s.append("Modelo: ").append(o.getEquipo().getModelo()).append("\n\n");
+        
+        s.append("SERVICIO\n");
+        s.append("Servicio: ").append(o.getServicio().getServicioBase()).append("\n");
+        s.append("Urgencia: ").append(o.getServicio().getUrgencia()).append("\n");
+        s.append("Problema: ").append(o.getServicio().getDescripcionProblema()).append("\n\n");
+        
+        if (!o.getServiciosAdicionales().isEmpty()) {
+            s.append("SERVICIOS ADICIONALES\n");
+            for (ServicioAdicional a : o.getServiciosAdicionales()) {
+                s.append("✓ ").append(a.getNombre()).append("\n");
+            }
         }
+        s.append("\n═════════════════════════════");
+        
         return s.toString();
     }
 
@@ -149,7 +227,7 @@ public class OrdenControlador {
     }
 
     private void setTexto(String name, String value) {
-        ((JTextComponent) getComponent(name)).setText(value);
+        ((JTextComponent) getComponent(name)).setText(value == null ? "" : value);
     }
 
     private String valor(String name) {
