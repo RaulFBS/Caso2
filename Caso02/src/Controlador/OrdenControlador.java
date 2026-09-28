@@ -20,11 +20,12 @@ public class OrdenControlador {
     private OrdenServicio ordenPendiente;
 
     public OrdenControlador(IOrdenRepository repositorio, MainView vista) {
-        if (repositorio == null || vista == null) throw new IllegalArgumentException("Dependencias requeridas");
+        if (repositorio == null || vista == null) {
+            throw new IllegalArgumentException("Dependencias requeridas");
+        }
         this.repositorio = repositorio;
         this.vista = vista;
         registrarEventos();
-        // Inicializa en la tarjeta de cliente
         mostrar("card2");
     }
 
@@ -44,16 +45,15 @@ public class OrdenControlador {
         String dni = texto("txtDni");
         String nombre = texto("txtNombreCliente");
         String telefono = texto("txtTelefono");
-        
+
         if (dni.isEmpty() || nombre.isEmpty() || telefono.isEmpty()) {
             error("Complete todos los datos del cliente");
             return;
         }
-        
+
         cliente = new Cliente(dni, nombre, telefono);
         info("Cliente registrado exitosamente.\nProcediendo a registrar equipo...");
         limpiarCliente();
-        // Navega a la tarjeta de equipo
         mostrar("card3");
     }
 
@@ -76,7 +76,7 @@ public class OrdenControlador {
         String tipo = valor("jComboBox1");
         String marca = texto("txtMarca");
         String modelo = texto("txtModelo");
-        
+
         if (tipo == null || tipo.isEmpty() || tipo.equals("Item 1")) {
             error("Seleccione un tipo de equipo válido");
             return;
@@ -89,11 +89,10 @@ public class OrdenControlador {
             error("Ingrese el modelo del equipo");
             return;
         }
-        
+
         equipo = new Equipo(tipo, marca, modelo);
         info("Equipo registrado exitosamente.\nProcediendo a registrar servicio...");
         limpiarEquipo();
-        // Navega a la tarjeta de servicio
         mostrar("card4");
     }
 
@@ -111,11 +110,11 @@ public class OrdenControlador {
             error("Debe registrar un equipo primero");
             return;
         }
-        
+
         String base = valor("jComboBox2");
         String urgencia = radio();
         String descripcion = texto("jTextArea1");
-        
+
         if (base == null || base.isEmpty() || base.equals("Item 1")) {
             error("Seleccione un servicio base válido");
             return;
@@ -128,25 +127,24 @@ public class OrdenControlador {
             error("Describa el problema del equipo");
             return;
         }
-        
+
         List<ServicioAdicional> adicionales = new ArrayList<>();
         String[] checks = {"jCheckBox1", "jCheckBox2", "jCheckBox3", "jCheckBox5"};
-        
+
         for (String name : checks) {
             JCheckBox c = getCheckBox(name);
             if (c.isSelected()) {
                 adicionales.add(new ServicioAdicional(c.getText()));
             }
         }
-        
-        ordenPendiente = new OrdenServicio(cliente, equipo, 
-                                          new Servicio(base, urgencia, descripcion), 
-                                          adicionales);
-        
+
+        ordenPendiente = new OrdenServicio(cliente, equipo,
+                new Servicio(base, urgencia, descripcion),
+                adicionales);
+
         setTexto("jTextArea2", resumen(ordenPendiente));
         limpiarServicio();
         info("Servicio registrado.\nVerifique el resumen de la orden...");
-        // Navega a la tarjeta de resumen
         mostrar("card5");
     }
 
@@ -168,8 +166,6 @@ public class OrdenControlador {
         ordenPendiente = null;
         cliente = null;
         equipo = null;
-        
-        // Reinicia el flujo
         mostrar("card2");
     }
 
@@ -178,22 +174,22 @@ public class OrdenControlador {
         s.append("═════════════════════════════\n");
         s.append("          RESUMEN DE ORDEN\n");
         s.append("═════════════════════════════\n\n");
-        
+
         s.append("CLIENTE\n");
         s.append("DNI: ").append(o.getCliente().getDni()).append("\n");
         s.append("Nombre: ").append(o.getCliente().getNombre()).append("\n");
         s.append("Teléfono: ").append(o.getCliente().getTelefono()).append("\n\n");
-        
+
         s.append("EQUIPO\n");
         s.append("Tipo: ").append(o.getEquipo().getTipo()).append("\n");
         s.append("Marca: ").append(o.getEquipo().getMarca()).append("\n");
         s.append("Modelo: ").append(o.getEquipo().getModelo()).append("\n\n");
-        
+
         s.append("SERVICIO\n");
         s.append("Servicio: ").append(o.getServicio().getServicioBase()).append("\n");
         s.append("Urgencia: ").append(o.getServicio().getUrgencia()).append("\n");
         s.append("Problema: ").append(o.getServicio().getDescripcionProblema()).append("\n\n");
-        
+
         if (!o.getServiciosAdicionales().isEmpty()) {
             s.append("SERVICIOS ADICIONALES\n");
             for (ServicioAdicional a : o.getServiciosAdicionales()) {
@@ -201,14 +197,16 @@ public class OrdenControlador {
             }
         }
         s.append("\n═════════════════════════════");
-        
+
         return s.toString();
     }
 
     private String radio() {
         JRadioButton[] radios = {getRadio("jRadioButton1"), getRadio("jRadioButton2"), getRadio("jRadioButton3")};
         for (JRadioButton r : radios) {
-            if (r.isSelected()) return r.getText();
+            if (r.isSelected()) {
+                return r.getText();
+            }
         }
         return "";
     }
