@@ -1,20 +1,17 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
 package caso02;
 
-/**
- *
- * @author rs662
- */
-public class Caso02 {
+import Controlador.OrdenControlador;
+import Repository.OrdenRepository;
+import Vista.MainView;
+import javax.swing.SwingUtilities;
 
-    /**
-     * @param args the command line arguments
-     */
+public class Caso02 {
     public static void main(String[] args) {
-        // TODO code application logic here
+        SwingUtilities.invokeLater(() -> {
+            MainView vista = new MainView();
+            new OrdenControlador(new OrdenRepository(), vista);
+            vista.setLocationRelativeTo(null);
+            vista.setVisible(true);
+        });
     }
-    
 }

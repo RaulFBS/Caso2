@@ -1,13 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
 package Repository;
 
-/**
- *
- * @author rs662
- */
-public interface IOrdenRepositorio {
-    
-}
+/** Compatibilidad con el nombre original del proyecto. */
+public interface IOrdenRepositorio extends IOrdenRepository { }
